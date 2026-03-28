@@ -6,6 +6,9 @@ from bs4 import BeautifulSoup
 
 class AdoroCinema:
     
+    # entrada: código do filme
+    # procura a div da sinopse pela classe content-txt, se não achar lança ValueError
+    # saída: string da sinopse
     def extrairSinopseFilme (self, filme):
         url = "https://www.adorocinema.com/filmes/" + filme + '/'
         htmlFilme = requests.get(url).text
@@ -16,28 +19,36 @@ class AdoroCinema:
         sinopse = sinopse_tag.get_text(strip=True)
         return sinopse
     
+    # entrada: código do filme e sinopse
+    # cria um arquivo nomeado com o código do filme e salva a sinopse em UTF-8
     def salvarSinopseFilme(self, filme, sinopse):
         arq_saida = open (filme+'_sinopse.txt', 'w', encoding='utf-8')
-        arq_saida.write(sinopse)
+        sinopse_quebrada = textwrap.fill(sinopse, width=80)
+        arq_saida.write(sinopse_quebrada)
         arq_saida.close()
 
-    ## aplicação do regex
+    # entrada: texto do comentário
+    # padroniza primeiro para minúscula
+    # define padrões de regex e compara cada padrão usando re.findall
+    # saída: categoria
     def classificarComentarioRegex(self, texto):
         texto = texto.lower()
 
+        # * = zero ou mais repetições
+        # \w = caractere -> letras, números e _
         padroes_positivos = [
             r"\bexcelent\w*", r"\botim\w*", r"\bmaravilh\w*", r"\bincr[ii]vel\w*",
             r"\bamei\b", r"\badorei\b", r"\bgostei\b", r"\bperfeit\w*",
             r"\bemocion\w*", r"\bdivertid\w*", r"\brecomend\w*", r"\btop\b"
         ]
         padroes_negativos = [
-            r"\bruim\b", r"\bpessim\w*", r"\bhorr[ii]vel\w*", r"\bodi\w*",
+            r"\bruim\b", r"\bpessim\w*", r"\bhorr[ií]vel\w*", r"\bodi\w*",
             r"\bchato\w*", r"\bfraco\w*", r"\bdecepcion\w*", r"\blento\w*",
             r"\bcansativ\w*", r"\bpior\b", r"\bfrustr\w*", r"\bdesnecessar\w*"
         ]
         padroes_neutros = [
             r"\bregular\b", r"\bmediano\w*", r"\brazoavel\w*", r"\bnormal\b",
-            r"\bok\b", r"\bmais ou menos\b", r"\bpassavel\w*"
+            r"\bok\b", r"\bmais ou menos\b", r"\bpassavel\w*", r"\bmeh\b"
         ]
 
         positivos = sum(len(re.findall(padrao, texto)) for padrao in padroes_positivos)
@@ -61,12 +72,17 @@ class AdoroCinema:
             comentarios_com_tags = bsC.find_all('div', class_="content-txt review-card-content")
             for comentario_com_tag in comentarios_com_tags:
                 texto_comentario = comentario_com_tag.get_text().strip()
+                if len(texto_comentario) == 0:
+                    continue
                 comentarios.append(
                     {
                         'texto': texto_comentario,
                         'categoria': self.classificarComentarioRegex(texto_comentario)
                     }
                 )
+
+        if len(comentarios) == 0:
+            print("Nao ha comentarios ainda.")
         return comentarios
     
     ## quantidade de comentários e percentual de cada categoria
@@ -98,13 +114,12 @@ filme = input('Digite o codigo do filme (ex.: filme-282076 ou 282076): ')
 n = int(input('Digite quantas paginas de comentarios voce deseja consultar: '))
 
 crawler = AdoroCinema()
-filme_normalizado = crawler.normalizarCodigoFilme(filme)
 
 try:
-    sinopse = crawler.extrairSinopseFilme(filme_normalizado)
-    crawler.salvarSinopseFilme(filme_normalizado, sinopse)
-    comentarios = crawler.extrairComentariosFilme(filme_normalizado, n)
-    crawler.salvarComentariosFilme(filme_normalizado, comentarios)
+    sinopse = crawler.extrairSinopseFilme(filme)
+    crawler.salvarSinopseFilme(filme, sinopse)
+    comentarios = crawler.extrairComentariosFilme(filme, n)
+    crawler.salvarComentariosFilme(filme, comentarios)
     total, contagem, percentuais = crawler.calcularEstatisticasCategorias(comentarios)
 
     print(f'Total de comentarios lidos: {total}')
