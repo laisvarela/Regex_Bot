@@ -5,27 +5,11 @@ from bs4 import BeautifulSoup
 
 
 class AdoroCinema:
-
-    def normalizarCodigoFilme(self, filme):
-        codigo = filme.strip().strip('/').lower()
-        if codigo.startswith('filmes/'):
-            codigo = codigo.split('filmes/', 1)[1]
-        if not codigo.startswith('filme-'):
-            codigo = 'filme-' + codigo
-        return codigo
-
-    def _get_soup(self, url):
-        headers = {
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36"
-        }
-        resposta = requests.get(url, headers=headers, timeout=15)
-        resposta.raise_for_status()
-        return BeautifulSoup(resposta.text, 'html.parser')
     
     def extrairSinopseFilme (self, filme):
-        filme = self.normalizarCodigoFilme(filme)
         url = "https://www.adorocinema.com/filmes/" + filme + '/'
-        bsS = self._get_soup(url)
+        htmlFilme = requests.get(url).text
+        bsS = BeautifulSoup(htmlFilme, 'html.parser')
         sinopse_tag = bsS.find('div', class_="content-txt")
         if not sinopse_tag:
             raise ValueError("Nao foi possivel localizar a sinopse. Verifique o codigo do filme e se a pagina mudou.")
@@ -69,11 +53,11 @@ class AdoroCinema:
         return 'Neutro'
         
     def extrairComentariosFilme(self, filme, n):
-        filme = self.normalizarCodigoFilme(filme)
         comentarios = []
         for i in range(1, n+1):
             url = 'https://www.adorocinema.com/filmes/' + filme + '/criticas/espectadores/?page=' + str(i)
-            bsC = self._get_soup(url)
+            htmlComentarios = requests.get(url).text
+            bsC = BeautifulSoup(htmlComentarios, 'html.parser')
             comentarios_com_tags = bsC.find_all('div', class_="content-txt review-card-content")
             for comentario_com_tag in comentarios_com_tags:
                 texto_comentario = comentario_com_tag.get_text().strip()
