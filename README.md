@@ -1,11 +1,11 @@
 # Regex Bot - Analise de comentarios de filmes
 
 ## Objetivo do trabalho
-Este trabalho tem como objetivo coletar comentarios de espectadores no site AdoroCinema e aplicar expressoes regulares para classificar cada comentario como Positivo, Neutro ou Negativo.
+Este trabalho tem como objetivo coletar comentarios de espectadores no site AdoroCinema e aplicar regex para classificar cada comentario como Positivo, Neutro ou Negativo.
 
 O programa:
-- le a sinopse de um filme;
-- le comentarios de uma ou mais paginas;
+- lê a sinopse de um filme;
+- lê comentarios de uma ou mais paginas;
 - classifica os comentarios por categoria de sentimento com regex;
 - calcula quantidade e percentual por categoria;
 - salva os resultados em arquivos de texto.
