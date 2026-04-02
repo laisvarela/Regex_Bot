@@ -47,24 +47,28 @@ class AdoroCinema:
     def classificarComentarioRegex(self, texto):
         texto = texto.lower()
 
-        # * = zero ou mais repetições
-        # \w = caractere -> letras, números e _
+        texto = re.sub(r"\bn[aã]o [eé]\s+", "não ", texto)
+        texto = re.sub(r"\bn[aã]o foi\s+", "não ", texto)
+        texto = re.sub(r"\bn[aã]o achei\s+", "não ", texto)
+
         padroes_positivos = [
             r"\bexcelent\w*", r"\botim\w*", r"\bmaravilh\w*", r"\bincr[ií]vel\w*",
             r"\bamei\b", r"\badorei\b", r"\bgostei\b", r"\bperfeit\w*",
             r"\bemocion\w*", r"\bdivertid\w*", r"\brecomend\w*", r"\btop\b",
             r"\bextraordin[aá]ri\w*", r"\bfeliz\b", r"\bsurpreendente\b", 
             r"\bexcelente\b", r"\b[oó]timo roteiro\b", r"\blind\w*", r"\bimpec[aá]vel\b",
-            r"\bmuito bom\b", r"\bentrega muito\b", r"\bgag\b", r"fant[aá]stic\w",
-            r"\bme fez chorar\b", r"\beletrizante\b", r"\bmelhor filme\b", r"\bfavorito\b"
+            r"\bmuito bom\b", r"\bentrega muito\b", r"\bgag\b", r"\bfant[aá]stic\w*",
+            r"\bme fez chorar\b", r"\beletrizante\b", r"\bmelhor filme\b", r"\bfavorito\b",
+            r"\bbom\b"
         ]
         padroes_negativos = [
-            r"\bruim\b", r"\bp[eé]ssim\w*", r"\bhorr[ií]vel\w*", r"\bodi\w*",
+            r"\bruim\b", r"\bp[eé]ssim\w*", r"\bhorr[ií]vel\w*", r"\bodiei\w*",
             r"\bchato\w*", r"\bfraco\w*", r"\bdecepcion\w*", r"\blento\w*",
             r"\bcansativ\w*", r"\bpior\b", r"\bfrustr\w*", r"\bdesnecessar\w*",
             r"\bn[aã]o gostei\b", r"\binfeliz\b", r"\bchatead\w*", r"\bdesperd[ií]ci\w*",
             r"\bn[aã]o recomendo\b", r"\bbobagem\b", r"\bburacos? de roteiro\b",
-            r"\bfalta de coer[eê]ncia\b", r"\broteiro confuso\b", r"\bsem sentido\b"
+            r"\bfalta de coer[eê]ncia\b", r"\broteiro confuso\b", r"\bsem sentido\b",
+            r"\bn[aã]o bom\b", r"\bbobo\w*"
         ]
         padroes_negativos_fortes = [
             r"\bdesperd[ií]ci\w* de potencial\b",
@@ -78,13 +82,17 @@ class AdoroCinema:
             r"\bok\b", r"\bmais ou menos\b", r"\bpassavel\w*", r"\bmeh\b"
         ]
 
+        prefixo = r"(?<!n[aã]o )(?<!nem )"
+        padroes_positivos = [rf"{prefixo}{p}" for p in padroes_positivos]
+
+        padroes_negativos = [rf"{prefixo}{p}" if not p.startswith(r"\bn[aã]o") else p for p in padroes_negativos]
+        padroes_neutros = [rf"{prefixo}{p}" for p in padroes_neutros]
+
         positivos = sum(len(re.findall(padrao, texto)) for padrao in padroes_positivos)
         negativos = sum(len(re.findall(padrao, texto)) for padrao in padroes_negativos)
         neutros = sum(len(re.findall(padrao, texto)) for padrao in padroes_neutros)
         negativos_fortes = sum(len(re.findall(padrao, texto)) for padrao in padroes_negativos_fortes)
 
-        # Comentarios com termos fortemente negativos devem pender para "Negativo",
-        # mesmo quando aparece uma palavra positiva fora de contexto (ex.: "exemplo perfeito de desperdicio").
         if negativos_fortes > 0 and negativos >= positivos:
             return 'Negativo'
         if positivos > negativos:
