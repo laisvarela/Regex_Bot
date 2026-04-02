@@ -99,8 +99,6 @@ class AdoroCinema:
             return 'Positivo'
         if negativos > positivos:
             return 'Negativo'
-        if neutros > 0:
-            return 'Neutro'
         return 'Neutro'
     
     def salvarComentariosFilme(self, filme, comentarios):
